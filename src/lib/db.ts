@@ -3,19 +3,38 @@ import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_PATH = path.join(DB_DIR, 'salle.db');
+// On Vercel, only /tmp is writable. We copy the seed DB there on cold start.
+const IS_VERCEL = process.env.VERCEL === '1';
+const TMP_DB_PATH = '/tmp/salle.db';
+const SEED_DB_PATH = path.join(process.cwd(), 'data', 'salle.db');
+
+function getDbPath(): string {
+  if (!IS_VERCEL) {
+    // Local dev: use data/ directly (fully writable)
+    const dir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    return path.join(dir, 'salle.db');
+  }
+
+  // Vercel: copy seed DB to /tmp if not already there
+  if (!fs.existsSync(TMP_DB_PATH)) {
+    if (fs.existsSync(SEED_DB_PATH)) {
+      fs.copyFileSync(SEED_DB_PATH, TMP_DB_PATH);
+    }
+    // If no seed DB exists either, start fresh — initSchema will create all tables
+  }
+  return TMP_DB_PATH;
+}
 
 let db: Database.Database | null = null;
 
 export function getDb(): Database.Database {
-  if (db) return db;
-
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+  // On Vercel /tmp can be wiped between warm invocations — reopen if file gone
+  if (db) {
+    try { db.prepare('SELECT 1').get(); return db; } catch { db = null; }
   }
-
-  db = new Database(DB_PATH);
+  const dbPath = getDbPath();
+  db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   initSchema(db);
