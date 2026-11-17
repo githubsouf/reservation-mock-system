@@ -11,78 +11,76 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     });
     const data = await res.json();
-    if (!res.ok) {
-      setError(data.error || 'Erreur lors de la création du compte.');
-    } else {
-      router.push('/login?registered=1');
-    }
+    if (!res.ok) setError(data.error || 'Erreur lors de la création du compte.');
+    else router.push('/login?registered=1');
     setLoading(false);
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%', border: '1.5px solid #e2e8f0', borderRadius: 10,
+    padding: '11px 14px', fontSize: 14, outline: 'none',
+    boxSizing: 'border-box', fontFamily: 'inherit', color: '#0f172a',
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-xl border border-gray-200 p-8 w-full max-w-sm shadow-sm">
-        <div className="text-center mb-6">
-          <div className="text-4xl mb-2">🏢</div>
-          <h1 className="text-xl font-bold text-gray-900">Créer un compte</h1>
-          <p className="text-sm text-gray-500 mt-1">Rejoignez SalleRésa</p>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #312e81 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 48, height: 48, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#fff' }}>S</div>
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.3px' }}>SalleRésa</span>
+          </Link>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-            <input
-              type="text"
-              required
-              value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Prénom Nom"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="vous@exemple.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={form.password}
-              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Minimum 6 caractères"
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Création…' : 'Créer mon compte'}
-          </button>
-        </form>
-        <p className="text-center text-sm text-gray-500 mt-5">
-          Déjà un compte ?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline font-medium">Se connecter</Link>
-        </p>
+
+        <div style={{ background: '#ffffff', borderRadius: 20, padding: '36px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: '0 0 6px', letterSpacing: '-0.5px' }}>Créer un compte ✨</h1>
+          <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 28px' }}>Rejoignez SalleRésa et réservez vos salles</p>
+
+          <form onSubmit={handleSubmit}>
+            {[
+              { key: 'name', label: 'Nom complet', type: 'text', placeholder: 'Prénom Nom' },
+              { key: 'email', label: 'Email', type: 'email', placeholder: 'vous@exemple.com' },
+              { key: 'password', label: 'Mot de passe', type: 'password', placeholder: 'Minimum 6 caractères' },
+            ].map(({ key, label, type, placeholder }) => (
+              <div key={key} style={{ marginBottom: 18 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>{label}</label>
+                <input
+                  type={type} required minLength={key === 'password' ? 6 : undefined}
+                  value={form[key as keyof typeof form]}
+                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  placeholder={placeholder}
+                  style={inputStyle}
+                />
+              </div>
+            ))}
+
+            {error && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#dc2626', marginBottom: 18 }}>
+                {error}
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} style={{
+              width: '100%', background: loading ? '#94a3b8' : 'linear-gradient(135deg, #2563eb, #7c3aed)',
+              color: '#fff', border: 'none', borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 6,
+            }}>
+              {loading ? 'Création…' : 'Créer mon compte'}
+            </button>
+          </form>
+
+          <p style={{ textAlign: 'center', fontSize: 14, color: '#64748b', margin: '20px 0 0' }}>
+            Déjà un compte ?{' '}
+            <Link href="/login" style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}>Se connecter</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
